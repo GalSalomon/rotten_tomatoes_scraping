@@ -95,7 +95,7 @@ def add_directors_with_grequests(movies):
     and added a new key "directors" with a value of the movie's directors"""
     for x in range(int(len(movies) / conf.BATCH_SIZE)):
         urls = []
-        movies_logger.info(f'Starting batch {x+1}/{len(range(int(len(movies) / conf.BATCH_SIZE)))}')
+        movies_logger.info(f'Starting batch {x + 1}/{len(range(int(len(movies) / conf.BATCH_SIZE)))}')
         for i in range(x * conf.BATCH_SIZE, x * conf.BATCH_SIZE + conf.BATCH_SIZE):
             urls.append(movies[i]['url'])
         soups = get_soups_from_urls(urls)
@@ -127,3 +127,14 @@ def get_imdb_top_250_with_grequests(url=conf.IMDB_TOP_250_URL):
 
 if __name__ == "__main__":
     get_imdb_top_250_with_grequests()
+
+"""
+# Todo:
+ask if we can use grequests
+ask if we can use pandas:
+
+we plan to fill this table:
+
+movies:
+title, genre, length, score1, score2, year, poster, text
+"""
