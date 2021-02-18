@@ -72,20 +72,14 @@ def get_soup_from_url(url):
 
 def get_attributes_from_soup(movie_soup):
     # todo fix this function to get all the required data from the movie page
-    """gets soup of a movie url and returns the director/s from the page"""
-    movies_logger.info(f'Looking for directors in the soup')
-    credit_items = movie_soup.findAll("div", {"class": "credit_summary_item"})
-    # Find the director tag
-    directors_tag = [c for c in credit_items if "Director" in c.h4.contents[0]][0]
-    # get the director/s names
-    directors_lst = [x.contents[0] for x in directors_tag.find_all('a')]
-    if len(directors_lst) == 0:
-        movies_logger.error(f"Didn't find directors for this movie...")
-    elif len(directors_lst) == 1:
-        movies_logger.info(f"One director was found and stored")
-    else:
-        movies_logger.info(f"Found more than one director. All were stored")
-    return ", ".join(directors_lst)
+    """receives the soup of a movie url and returns a pandas df with the attributes"""
+    movies_logger.info(f'Looking for movie attributes in soup')
+    # attrs = ['title', 'url', 'genre', 'length', 'score1', 'score2', 'year', 'poster', 'text']
+    s = movie_soup.findAll("score-board", {"audiencestate": "upright"})
+    year, genre, length = s[0].p.contents[0].split(', ')
+
+
+    return
 
 
 def get_titles_with_bs4(url):
@@ -120,8 +114,8 @@ def get_attributes_from_movies_urls(movies):
 
 def get_top_movies_on_rotten_tomatoes(url=conf.TOMATO_BEST_MOVIES):
     # this function is DONE!
-    """this function gets no input and prints the top 250 movies and their directors according to imdb
-    but this time with grequests"""
+    """this function gets no input and creates a pandas df with several attributes
+    about the top netflix movies on rotten tomatoes"""
     start = datetime.now()
     movies_logger.info(f'Starting to fetch all movies from {url} now!')
     titles = get_titles_with_bs4(url)
