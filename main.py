@@ -57,13 +57,12 @@ def get_soups_from_urls(urls):
 
 
 def get_soup_from_url(url):
-    # this function is DONE!
-    """gets a url and returns it's parsed content in bs4.BeautifulSoup type """
+    """function gets a url and returns it's parsed content in bs4.BeautifulSoup type"""
     try:
         movies_logger.info(f'Trying to get response for {url}')
         response = requests.get(url)
     except Exception as err:
-        movies_logger.error(f'An error occurred: {err}')
+        movies_logger.error(f'An error occurred: {err}') # todo: add more exceptions and explain in details
         movies_logger.error(f'Exit program')
         sys.exit(1)
     movies_logger.info(f'Succeed getting response for {url}')
@@ -84,7 +83,7 @@ def get_attributes_from_soup(movie_soup):
 
 def get_titles_with_bs4(url):
     # this function is DONE!
-    """receives the url of the current top 100 movies on netflix
+    """function receives the url of the current top 100 movies on netflix
     and returns a list of 100 soups (including the name of the movie and url to it's
     page on rotten tomatoes)"""
     page_soup = get_soup_from_url(url)
@@ -132,14 +131,3 @@ def get_top_movies_on_rotten_tomatoes(url=conf.TOMATO_BEST_MOVIES):
 
 if __name__ == "__main__":
     get_top_movies_on_rotten_tomatoes()
-
-"""
-# Todo:
-ask if we can use grequests
-ask if we can use pandas:
-
-we plan to fill this table:
-
-movies:
-title, genre, length, score1, score2, year, poster, text
-"""
