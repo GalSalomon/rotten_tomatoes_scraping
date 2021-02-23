@@ -10,10 +10,8 @@ from datetime import datetime
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
 
-############
-
 def setup_logger(name, log_file, level=logging.INFO):
-    """To setup few loggers"""
+    """To setup a logger"""
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)
     logger = logging.getLogger(name)
@@ -26,8 +24,7 @@ movies_logger = setup_logger('movies_log', 'movies.log')
 
 
 def get_soup_from_response(response):
-    # this function is DONE!
-    """receives  a response from requests/grequests and returns soup"""
+    """this function gets a response from requests/grequests and returns soup"""
     page_html = response.content
     # html parser
     movies_logger.debug(f'Parsing the response to soup')
@@ -50,7 +47,7 @@ def get_soup_from_url(url):
 
 def get_responses_from_urls(urls):
     # this function is DONE!
-    """receives urls and returns responses"""
+    """receives list of urls and returns responses"""
     try:
         movies_logger.info(f'trying to get responses for next {len(urls)} urls')
         rs = (grequests.get(url) for url in urls)
@@ -64,15 +61,18 @@ def get_responses_from_urls(urls):
     return responses
 
 
-def get_soups_from_urls(urls):
-    # this function is DONE!
-    """receives urls and returns a list of soups"""
-    responses = get_responses_from_urls(urls)
-    return [get_soup_from_response(response) for response in responses]
+def get_soups_from_urls(urls_batch):
+    """receives dict of key movie titles and values urls
+    and returns a dict of keys movie titles and values soups"""
+    keys = list(urls_batch.keys())
+    responses = get_responses_from_urls(list(urls_batch.values()))
+    responses_dict = {}
+    for i, key in enumerate(keys):
+        responses_dict[key] = get_soup_from_response(responses[i])
+    return responses_dict
 
 
-def get_titles_with_bs4(url):  # Backup this function
-    # this function is DONE!
+def get_titles_with_bs4(url):
     """function receives the url of the current top 100 movies on netflix
     and returns a list of 100 soups (including the name of the movie and url to it's
     page on rotten tomatoes)"""
@@ -83,100 +83,104 @@ def get_titles_with_bs4(url):  # Backup this function
     return titles
 
 
-def get_attributes_from_soup(movie_soup):
-    #####################
-    # 1. soup --->> get everything from soup as a data (dataframe?,list?,tuple?...)
-    # 2.
-    ############
-    ########################
-
-    # todo fix this function to get all the required data from the movie page
-    """receives the soup of a movie url and returns a pandas df with the attributes"""
+def add_attributes_from_soup(movie_soup):
+    """This function receives the soup of a movie url.
+    If the soup is valid, returns a pandas df of one row with the attributes of the movie.
+    If not, it returns False"""
     movies_logger.info(f'Looking for movie attributes in soup')
+    if movie_soup.find("div", {"id": "mainColumn"}).get_text():
+        return False
+    # todo remove the next line
     # attrs = ['title', 'url', 'genre', 'length', 'score1', 'score2', 'year', 'poster', 'text']
-    move_profile = movie_soup.findAll("score-board", {"audiencestate": "upright"})
-    move_poster = movie_soup.find("img", {"class": "posterImage js-lazyLoad"})
-    move_desc = movie_soup.find("div", {"id": "movieSynopsis"})
-    if move_desc:
-        move_desc = move_desc.get_text().strip()
+    # the scores, year, genre and length are in the profile
+    movie_poster_html = movie_soup.find("img", {"class": "posterImage js-lazyLoad"})
+    movie_desc_html = movie_soup.find("div", {"id": "movieSynopsis"})
+    # movie profile could be in upright or spilled classes:
+    if movie_soup.findAll("score-board", {"audiencestate": "upright"}):
+        movie_profile_html = movie_soup.findAll("score-board", {"audiencestate": "upright"})
+    else:
+        movie_profile_html = movie_soup.findAll("score-board", {"audiencestate": "spilled"})
 
-    if move_poster:
-        move_poster = move_poster.get('data-src')
+    # movie_desc_html might be missing
+    if movie_desc_html:
+        movie_desc = movie_desc_html.get_text().strip()
+    else:
+        print("we got to do something here")  # todo
+    if movie_poster_html:
+        movie_poster = movie_poster_html.get('data-src')
+    else:
+        print("we got to do something here")  # todo
 
-    if not movie_soup.findAll("score-board", {"audiencestate": "upright"}):
-        move_profile = movie_soup.findAll("score-board", {"audiencestate": "spilled"})
     # print(title)
     # score
     # poster link      ("div", {"class": "credit_summary_item"}):
     # text desc data-qa="critics-consensus"
-    for feature in move_profile:
-        audience_score = feature.get('audiencescore')
-        tomato_score = feature.get('tomatometerscore')
-        h1_tag_text = feature.find('h1').get_text()
-        p_tag_text = feature.find('p').get_text()
-        year, genre, length = p_tag_text.split(',')
-        print("poster", move_poster)
-        print("title: ", h1_tag_text)
-        print("desc: ", move_desc)
-        print("year: ", year)
-        print("genre: ", genre)
-        print("length: ", length)
-        print("audience score: ", audience_score)
-        print("tomato score: ", tomato_score)
-        print("/////////NEXT/MOVIE////////")
-        return "/////NEXT/BATCH////////"
+    audience_score = movie_profile_html[0].get('audiencescore')
+    tomato_score = movie_profile_html[0].get('tomatometerscore')
+    h1_tag_text = movie_profile_html[0].find('h1').get_text()
+    p_tag_text = movie_profile_html[0].find('p').get_text()
+    year, genre, length = p_tag_text.split(',')
+    # columns = ['title', 'url', 'genre', 'length', 'score1', 'score2', 'year', 'poster', 'desc']
+    print("poster", movie_poster)
+    print("title: ", h1_tag_text)
+    print("desc: ", movie_desc)
+    print("year: ", year)
+    print("genre: ", genre)
+    print("length: ", length)
+    print("audience score: ", audience_score)
+    print("tomato score: ", tomato_score)
+    print("/////////NEXT/MOVIE////////")
+    return "/////NEXT/BATCH////////"
 
 
-####(title,year,genre,time.....)
-##################
-# todo Save responses from requests from web to files
-
-def get_attributes_from_movies_urls(movies):
-    # todo get all attributes for each movie
-    """gets a data frame with movie title and a link for the movie's page on rotten tomatoes
-     and returns a filled data frame, with the following additional columns.
-    """
-
-    for x in range(int(len(movies) / conf.BATCH_SIZE)):
-        # runs from 0 till len(movies) / BATCH_SIZE
-        movies_logger.info(f'Starting batch {x + 1}/{len(range(int(len(movies) / conf.BATCH_SIZE)))}')
-        soups = get_soups_from_urls(movies['url'][x * conf.BATCH_SIZE:x * conf.BATCH_SIZE + conf.BATCH_SIZE])
-        # todo: take it from here. I need to find the relevant data in the page and add it to the pandas df
-        soups_index = 0
-        for movie_soup in range(x * conf.BATCH_SIZE, x * conf.BATCH_SIZE + conf.BATCH_SIZE):
-            print(get_attributes_from_soup(soups[soups_index]))
+def get_attributes_from_movies_urls(movies_urls):
+    """this function receives a dict with movies titles and links for the movies
+    pages on rotten tomatoes and returns a dataframe, with the following additional columns."""
+    keys = list(movies_urls.keys())
+    for x in range(int(len(keys) / conf.BATCH_SIZE)):
+        # runs from 0 till len(keys) / BATCH_SIZE
+        movies_logger.info(f'Starting batch {x + 1}/{len(range(int(len(keys) / conf.BATCH_SIZE)))}')
+        urls_batch = {}
+        for key in keys[x * conf.BATCH_SIZE: x * conf.BATCH_SIZE + conf.BATCH_SIZE]:
+            urls_batch[key] = movies_urls[key]
+        soups = get_soups_from_urls(urls_batch)
+        # soups_index = 0
+        for i in range(x * conf.BATCH_SIZE, x * conf.BATCH_SIZE + conf.BATCH_SIZE):
+            atts = add_attributes_from_soup(soups[soups_index])
+            print(atts)
+            if atts:
+                pass  # todo update movies df with movie
+            else:
+                pass
             soups_index += 1
-            # get_attributes_from_soup(movie_soup)
-
-            # movies['title'][''] = get_attributes_from_soup(soups[soups_index])
-    #             soups_index += 1
-    #             print(f"{i + 1} - {movies[i]['movie_name']} - {movies[i]['directors']}")
-    #             movies_logger.info(f"{i + 1} - {movies[i]['movie_name']} - {movies[i]['directors']}")
     return movies
+
+
+def get_titles(url):
+    """function receives the url of the top netflix movies on rotten tomatoes
+    and returns a dict ot movie titles and urls """
+    movies_logger.info(f'Starting to fetch all movie titles from {url} now!')
+    titles = get_titles_with_bs4(url)
+    # creates the dict of titles and urls
+    movies_urls = {}
+    for title in titles:
+        movie_name, href = title.a.contents[0], title.a['href']
+        movies_urls[movie_name] = href
+    return movies_urls
 
 
 def get_top_movies_on_rotten_tomatoes(url=conf.TOMATO_BEST_MOVIES):
-    # this function is DONE!
-    """this function gets no input and creates a pandas df with several attributes
-    about the top netflix movies on rotten tomatoes"""
+    """this function receives no input and creates a pandas df with several attributes
+    of the top netflix movies on rotten tomatoes"""
     start = datetime.now()
-    movies_logger.info(f'Starting to fetch all movies from {url} now!')
-    titles = get_titles_with_bs4(url)
-
-    movies = pd.DataFrame(columns=['title', 'url', 'genre', 'length', 'score1', 'score2', 'year', 'poster', 'text'])
-
-    for t in titles:
-        movie_name, href = t.a.contents[0], t.a['href']
-        movies = movies.append(pd.DataFrame(columns=['title', 'url'], data=[[movie_name, href]]))
-    movies.set_index('title')
-    movies = get_attributes_from_movies_urls(movies)
-    print(f'this operation took {datetime.now() - start}')
+    # get movie titles
+    movies_urls = get_titles(url)
+    # get the attributes of the movies
+    movies_df = get_attributes_from_movies_urls(movies_urls)
     movies_logger.info(f'Done!')
     movies_logger.info(f'This operation took {datetime.now() - start}')
-    print(movies)
-
-    return movies
+    return movies_df
 
 
 if __name__ == "__main__":
-    get_top_movies_on_rotten_tomatoes()
+    df = get_top_movies_on_rotten_tomatoes()
