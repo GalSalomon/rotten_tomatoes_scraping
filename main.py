@@ -14,7 +14,7 @@ formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
 def setup_logger(name, log_file, level=logging.INFO):
     """To setup few loggers"""
-    handler = logging.FileHandler(log_file)
+    handler = logging.FileHandler(log_file, 'w', 'utf-8')
     handler.setFormatter(formatter)
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -62,8 +62,9 @@ def get_responses_from_urls(urls):
         for i, url in enumerate(urls):
             responses_dict[url] = responses[i]
     except Exception as err:
+        return err
         movies_logger.error(f'An error occurred: {err}')
-        movies_logger.error(f'Exit program') # todo: Must we leave the program? need to think about that
+        movies_logger.error(f'Exit program')  # todo: Must we leave the program? need to think about that
         sys.exit(1)
     movies_logger.info(f'Succeed getting responses for {len(urls)} urls')
     return responses_dict
@@ -74,6 +75,8 @@ def get_soups_from_urls(urls):
     keys = urls
     values = soups"""
     responses_dict = get_responses_from_urls(urls)
+    # todo: In this function, if we set responses_dict, and we get invalid respond/s (response 500) we can catch it here
+    #  instead of passing it to the next function
     soups_dict = {}
     for key in responses_dict:
         movies_logger.info(f'Creating soup for {key}')
@@ -93,12 +96,9 @@ def get_titles_with_bs4(url):
 
 
 def get_attributes_from_soup(key, movie_soup):
-    # todo fix this function to get all the required data from the movie page
     """receives the soup of a movie url and returns a pandas df with the attributes"""
     movies_logger.info(f'Looking for movie attributes in soup of {key}')
 
-    # todo: Don't you think it's best to type "try" here?
-    # todo: I mean do we always get "error"?
     error = movie_soup.find("div", {"id": "mainColumn"}).get_text()
     if 'Internal Server Error' in error:
         movies_logger.error(f'{error} for {key}')
@@ -116,7 +116,6 @@ def get_attributes_from_soup(key, movie_soup):
         movies_logger.info(f'score-board found for {key}!')
     else:
         move_profile = movie_soup.findAll("score-board", {"audiencestate": "N/A"})
-        # todo: what dod this mean? please enter a valid logger here
 
     movies_logger.info(f'Looking for poster in {key}')
     movie_poster = movie_soup.find("img", {"class": "posterImage js-lazyLoad"})
