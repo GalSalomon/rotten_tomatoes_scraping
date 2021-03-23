@@ -1,5 +1,5 @@
 import unittest
-import main3
+import main
 import numpy as np
 import conf
 import time
@@ -18,7 +18,7 @@ class TestStringMethods(unittest.TestCase):
         """
         Test to see if the function get_titles_movies returns a data frame object
         """
-        data = main3.get_titles_movies(
+        data = main.get_titles_movies(
             'https://editorial.rottentomatoes.com/guide/best-netflix-movies-to-watch-right-now/')
         df = pd.DataFrame()
         self.assertEqual(type(df), type(data))
@@ -34,7 +34,7 @@ class TestStringMethods(unittest.TestCase):
         with open("tests/1922_2017.html", "rb") as f:
             soup_object2 = soup(f.read(), features='html.parser')
 
-        function_dict_soup_1 = main3.get_attributes_from_soup('https://www.rottentomatoes.com/m/departed', soup_object1)
+        function_dict_soup_1 = main.get_attributes_from_soup('https://www.rottentomatoes.com/m/departed', soup_object1)
         test_dict_for_soup_1 = {'url': 'https://www.rottentomatoes.com/m/departed', 'title': 'The Departed',
                                 'poster': 'https://resizing.flixster.com/cpZ3WiuL4SQODLSNN-Zjwve_HHs=/206x305/v2/https://flxt.tmsimg.com/NowShowing/54979/54979_aa.jpg',
                                 'desc': "South Boston cop Billy Costigan (Leonardo DiCaprio) goes under cover to infiltrate the organization of gangland chief Frank Costello (Jack Nicholson). As Billy gains the mobster's trust, a career criminal named Colin Sullivan (Matt Damon) infiltrates the police department and reports on its activities to his syndicate bosses. When both organizations learn they have a mole in their midst, Billy and Colin must figure out each other's identities to save their own lives.",
@@ -49,7 +49,7 @@ class TestStringMethods(unittest.TestCase):
         assert function_dict_soup_1['tomato_score'] == test_dict_for_soup_1['tomato_score']
         assert function_dict_soup_1['length'] == test_dict_for_soup_1['length']
 
-        function_dict_soup_2 = main3.get_attributes_from_soup('https://www.rottentomatoes.com/m/1922_2017',
+        function_dict_soup_2 = main.get_attributes_from_soup('https://www.rottentomatoes.com/m/1922_2017',
                                                               soup_object2)
         test_dict_for_soup_2 = {'url': 'https://www.rottentomatoes.com/m/1922_2017', 'title': '1922',
                                 'poster': 'https://resizing.flixster.com/kBMRd_diQ5VYuIGLgvqXqiDabfI=/206x305/v2/https://resizing.flixster.com/NUpl7rLev_X0tjQf1vDOPhRUeuI=/ems.ZW1zLXByZC1hc3NldHMvbW92aWVzL2I5YTk5NWJhLTc5NTgtNGM0MS05ZjJhLTBmZjM2NmQ4ZDFhZi53ZWJw',
@@ -69,7 +69,7 @@ class TestStringMethods(unittest.TestCase):
         """
         Test to see if the function get_titles_with_bs4 returns a soup object
         """
-        data = main3.get_titles_with_bs4(
+        data = main.get_titles_with_bs4(
             'https://editorial.rottentomatoes.com/guide/best-netflix-movies-to-watch-right-now/')
         soup_object = soup()
         assert (isinstance(type(data), type(soup)))
