@@ -1,15 +1,8 @@
 import unittest
 import main
-import numpy as np
-import conf
-import time
-import grequests
-import logging
-import requests
+
 import pandas as pd
-import sys
 from bs4 import BeautifulSoup as soup
-from datetime import datetime
 
 
 class TestStringMethods(unittest.TestCase):
@@ -72,7 +65,7 @@ class TestStringMethods(unittest.TestCase):
         data = main.get_titles_with_bs4(
             'https://editorial.rottentomatoes.com/guide/best-netflix-movies-to-watch-right-now/')
         soup_object = soup()
-        assert (isinstance(type(data), type(soup)))
+        assert (isinstance(type(data), type(soup_object)))
 
 
 if __name__ == '__main__':
