@@ -1,6 +1,5 @@
 import unittest
 import main
-
 import pandas as pd
 from bs4 import BeautifulSoup as soup
 
@@ -43,7 +42,7 @@ class TestStringMethods(unittest.TestCase):
         assert function_dict_soup_1['length'] == test_dict_for_soup_1['length']
 
         function_dict_soup_2 = main.get_attributes_from_soup('https://www.rottentomatoes.com/m/1922_2017',
-                                                              soup_object2)
+                                                             soup_object2)
         test_dict_for_soup_2 = {'url': 'https://www.rottentomatoes.com/m/1922_2017', 'title': '1922',
                                 'poster': 'https://resizing.flixster.com/kBMRd_diQ5VYuIGLgvqXqiDabfI=/206x305/v2/https://resizing.flixster.com/NUpl7rLev_X0tjQf1vDOPhRUeuI=/ems.ZW1zLXByZC1hc3NldHMvbW92aWVzL2I5YTk5NWJhLTc5NTgtNGM0MS05ZjJhLTBmZjM2NmQ4ZDFhZi53ZWJw',
                                 'desc': 'A rancher conspires to murder his wife for financial gain and convinces his teenage son to participate.',
