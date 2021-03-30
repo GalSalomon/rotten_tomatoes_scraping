@@ -16,7 +16,7 @@ Project overall process:
 
 
 Install the dependencies from the requirements text file, and run the main.py file
-Using Python 3.8.5
+Using Python 3.9
 ```sh
 $ git clone https://github.com/GalSalomon/rotten_tomatoes_scraping
 $ cd rotten_tomatoes_scraping/
