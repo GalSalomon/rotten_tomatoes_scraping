@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 GENRES = ['Mystery and thriller', 'Music', 'Musical', 'Documentary', 'Drama',
           'Romance', 'Horror', 'War', 'Biography', 'Gay and lesbian', 'History',
           'Action', 'Crime', 'Comedy', 'Sci fi', 'Fantasy', 'Adventure', 'Kids and family', 'Animation',
-          'Sports and fitness','Other']
+          'Sports and fitness', 'Other']
 
 GENRES_DICT = {'Mystery and thriller': 0, 'Music': 1, 'Musical': 2, 'Documentary': 3, 'Drama': 4,
                'Romance': 5, 'Horror': 6, 'War': 7, 'Biography': 8, 'Gay and lesbian': 9, 'History': 10,
@@ -119,7 +119,7 @@ def movie_genres_to_dict(df):
     """
     dict_genre = {}
     for i in range(len(df)):
-        if type(df.loc[i, "genre"]) == type(''):
+        if type(df.loc[i, "genre"]) == str:
             list_genre = df.loc[i, "genre"].split('/')
             list_genre_to_id = []
             for genre in list_genre:
@@ -165,7 +165,7 @@ def create_table_disc(df, credentials, db_name):
     sql = "INSERT INTO description (movie_id, movie_desc) VALUES (%s, %s)"
     for i in range(len(df)):
         for element in list(df.iloc[i]):
-            if type(element) == type(''):
+            if type(element) == str:
                 val = (i, element)
                 mycursor.execute(sql, val)
     db_connection.commit()
@@ -185,8 +185,7 @@ def create_movie_tables(engine, df, credentials, db_name):
 
     genre_to_movie_id = pd.DataFrame.from_dict(movie_genres_to_dict(df[['genre']]), orient='index')
     create_table_movie_genre(genre_to_movie_id, credentials, db_name)
-    create_table_disc(df[['desc']],credentials,db_name)
-
+    create_table_disc(df[['desc']], credentials, db_name)
 
 
 def create_tables(credentials, db_name='no_db'):

@@ -2,11 +2,10 @@ import argparse
 import time
 import numpy as np
 
-
 GENRES = ['Mystery and thriller', 'Music', 'Musical', 'Documentary', 'Drama',
           'Romance', 'Horror', 'War', 'Biography', 'Gay and lesbian', 'History',
           'Action', 'Crime', 'Comedy', 'Sci fi', 'Fantasy', 'Adventure', 'Kids and family', 'Animation',
-          'Sports and fitness','Other']
+          'Sports and fitness', 'Other']
 
 MIN_YEAR_ALLOWED = 1960
 MAX_YEAR_ALLOWED = time.localtime().tm_year
