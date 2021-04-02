@@ -98,6 +98,8 @@ def create_movie_database(credentials, db_name='no_db'):
     mycursor = db_connection.cursor()
     if db_name == 'no_db':
         db_name = input('Enter new database name: ')
+
+    mycursor.execute("DROP DATABASE if exists " + str(db_name))
     mycursor.execute("CREATE DATABASE " + db_name)
     print(db_name, 'database created!')
     end_mysql_db_connection(db_connection, mycursor)
