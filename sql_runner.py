@@ -21,7 +21,7 @@ def query_options(dict_run):
     if dict_run['score'] == 'Audience':
         sql_command = ['SELECT url,title, length, year, poster,audience_score FROM movies ']
     if dict_run['score'] == 'Both':
-        sql_command = ['SELECT url,title, length, year, poster, (avg(movies.audience_score)+avg(movies.tomato_score))/2 as Average FROM movies ']
+        sql_command = ['SELECT url,title, length, year, poster, ((movies.audience_score)+(movies.tomato_score))/2 as Average FROM movies ']
 
     if dict_run['geners'] != None:
         genre_to_id_list = [GENRES_DICT[x] for x in dict_run['geners']]
