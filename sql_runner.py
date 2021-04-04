@@ -4,7 +4,7 @@ from sql_wizard import connect_to_mysql, end_mysql_db_connection_without_cursor,
 GENRES = ['Mystery and thriller', 'Music', 'Musical', 'Documentary', 'Drama',
           'Romance', 'Horror', 'War', 'Biography', 'Gay and lesbian', 'History',
           'Action', 'Crime', 'Comedy', 'Sci fi', 'Fantasy', 'Adventure', 'Kids and family', 'Animation',
-          'Sports and fitness','Other']
+          'Sports and fitness', 'Other']
 
 GENRES_DICT = {'Mystery and thriller': 0, 'Music': 1, 'Musical': 2, 'Documentary': 3, 'Drama': 4,
                'Romance': 5, 'Horror': 6, 'War': 7, 'Biography': 8, 'Gay and lesbian': 9, 'History': 10,
@@ -21,22 +21,23 @@ def query_options(dict_run):
     if dict_run['score'] == 'Audience':
         sql_command = ['SELECT url,title, length, year, poster,audience_score FROM movies ']
     if dict_run['score'] == 'Both':
-        sql_command = ['SELECT url,title, length, year, poster, ((movies.audience_score)+(movies.tomato_score))/2 as Average FROM movies ']
+        sql_command = ['SELECT url,title, length, year, poster, ((movies.audience_score)+(movies.tomato_score))/2 as '
+                       'Average FROM movies ']
 
-    if dict_run['geners'] != None:
+    if dict_run['geners'] is not None:
         genre_to_id_list = [GENRES_DICT[x] for x in dict_run['geners']]
-        if len(genre_to_id_list)>1:
+        if len(genre_to_id_list) > 1:
             t = tuple(genre_to_id_list)
         else:
-            t ='('+ str(genre_to_id_list[0]) +')'
-        sql_command.append('INNER JOIN movie_genre ON movie_genre.movie_id = movies.index  INNER JOIN genres ON movie_genre.genre_id = genres.index AND movie_genre.genre_id in {}'.format(t))
+            t = '(' + str(genre_to_id_list[0]) + ')'
+        sql_command.append('INNER JOIN movie_genre ON movie_genre.movie_id = movies.index  INNER JOIN genres ON '
+                           'movie_genre.genre_id = genres.index AND movie_genre.genre_id in {}'.format(t))
 
-
-    if dict_run['min_year'] == None and dict_run['max_year'] != None:
+    if dict_run['min_year'] is None and dict_run['max_year'] is not None:
         sql_command.append(' WHERE year < ' + str(dict_run['max_year']))
-    elif dict_run['min_year'] != None and dict_run['max_year'] == None:
+    elif dict_run['min_year'] is not None and dict_run['max_year'] is None:
         sql_command.append(' WHERE year > ' + str(dict_run['min_year']))
-    elif dict_run['min_year'] != None and dict_run['max_year'] != None:
+    elif dict_run['min_year'] is not None and dict_run['max_year'] is not None:
         sql_command.append(' WHERE year BETWEEN ' + str(dict_run['min_year']) + ' AND ' + str(dict_run['max_year']))
 
     if dict_run['score'] == 'Tomato':
@@ -46,13 +47,13 @@ def query_options(dict_run):
     if dict_run['score'] == 'Both':
         sql_command.append(' ORDER BY Average DESC')
 
-    if dict_run['limit'] != None:
+    if dict_run['limit'] is not None:
         sql_command.append(' LIMIT ' + str(dict_run['limit']))
 
     return ''.join(sql_command)
 
 
-def running_query(credentials, dict_run, db_name='no_db'):
+def running_query(dict_run, db_name='no_db'):
     """
     gets credentials, a dict and a database name
     runs a query on the database
@@ -60,7 +61,7 @@ def running_query(credentials, dict_run, db_name='no_db'):
     sql = query_options(dict_run)
     print(sql)
     print('connecting to mysql with database name')
-    db_connection = connect_to_mysql(credentials, db_name)
+    db_connection = connect_to_mysql(db_name)
     sql_data = pd.read_sql(sql, con=db_connection)
     print(sql_data)
     end_mysql_db_connection_without_cursor(db_connection)
@@ -68,6 +69,5 @@ def running_query(credentials, dict_run, db_name='no_db'):
 
 def run(dict_run):
     db_name = 'movies'
-    credentials = login_credentials(db_name)
-    running_query(credentials, dict_run, db_name)
-
+    login_credentials(db_name)
+    running_query(dict_run, db_name)
