@@ -237,6 +237,6 @@ def run():
     print('creating database')
     db_name = 'movies'
     login_credentials(db_name)
-    #create_movie_database(db_name)
-    #create_tables(db_name)
+    create_movie_database(db_name)
+    create_tables(db_name)
     print('done!')
