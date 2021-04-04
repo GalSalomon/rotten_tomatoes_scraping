@@ -31,7 +31,6 @@ def login_credentials(db_name='no_db'):
             for line in f.readlines():
                 try:
                     key, value = line[:-1].split('=')
-                    os.putenv(key, value)
                     os.environ[key] = value
 
                 except ValueError:
