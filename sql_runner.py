@@ -59,7 +59,6 @@ def running_query(dict_run, db_name='no_db'):
     runs a query on the database
     """
     sql = query_options(dict_run)
-    print(sql)
     print('connecting to mysql with database name')
     db_connection = connect_to_mysql(db_name)
     sql_data = pd.read_sql(sql, con=db_connection)

@@ -237,9 +237,13 @@ def get_top_movies_on_rotten_tomatoes(url=conf.TOMATO_BEST_MOVIES):
 
 
 if __name__ == "__main__":
+    print('Scraping! please wait a moment')
     df = get_top_movies_on_rotten_tomatoes()
     #print(df)
+    print('Done scraping! Creating the database!')
     args = sys.argv
     args_dict = mng_args.create_parser(args)
     sql_wizard.run()
+    print('Database is ready, running the query!')
+
     sql_runner.run(args_dict)
