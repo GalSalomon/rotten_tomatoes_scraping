@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import numpy as np
+import os
 from sqlalchemy import create_engine
 
 GENRES = ['Mystery and thriller', 'Music', 'Musical', 'Documentary', 'Drama',
@@ -17,33 +18,58 @@ GENRES_DICT = {'Mystery and thriller': 0, 'Music': 1, 'Musical': 2, 'Documentary
 
 def login_credentials(db_name='no_db'):
     """
-    :return: a list with login credentials:
+    creates a .env file with login credentials:
     first entry is the host name
     2nd entry is the username
     3rd entry is the password
     4th entry is the database name, if there isn't any
     """
 
-    credentials = [input("Enter host name: "), input("Enter username: "), input("Enter password: "), db_name]
+    PATH = '.env'
+    if os.path.isfile(PATH) and os.access(PATH, os.R_OK):
+        with open(".env", "r") as f:
+            for line in f.readlines():
+                try:
+                    key, value = line[:-1].split('=')
+                    os.putenv(key, value)
+                    os.environ[key] = value
 
-    return credentials
+                except ValueError:
+                    # syntax error
+                    pass
+
+    else:
+        credentials = [input("Enter host name: "), input("Enter username: "), input("Enter password: "), db_name]
+        os.environ['hostname'] = credentials[0]
+        os.environ['username'] = credentials[1]
+        os.environ['password'] = credentials[2]
+
+        with open(".env", "w") as f:
+            f.write('hostname=')
+            f.write(os.environ['hostname'])
+            f.write("\n")
+            f.write('username=')
+            f.write(os.environ['username'])
+            f.write("\n")
+            f.write('password=')
+            f.write(os.environ['password'])
+            f.write("\n")
 
 
-def connect_to_mysql(credentials, db_name='no_db'):
+def connect_to_mysql(db_name='no_db'):
     """
     Establish a mysql connection to a database,
     if there isn't any database, it will connect to the database
     without the database parameter
     :return: A db_connection object
     """
-
     # Login without db name
     if db_name == 'no_db':
         try:
             _db_connection = mysql.connector.connect(
-                host=credentials[0],
-                user=credentials[1],
-                passwd=credentials[2]
+                host=os.environ['hostname'],
+                user=os.environ['username'],
+                passwd=os.environ['password']
             )
         except Error as e:
             print(e)
@@ -53,9 +79,9 @@ def connect_to_mysql(credentials, db_name='no_db'):
     else:
         try:
             _db_connection = mysql.connector.connect(
-                host=credentials[0],
-                user=credentials[1],
-                passwd=credentials[2],
+                host=os.environ['hostname'],
+                user=os.environ['username'],
+                passwd=os.environ['password'],
                 database=db_name
             )
         except Error as e:
@@ -88,13 +114,13 @@ def end_mysql_db_connection(db_connection, mycursor):
         print("MySQL connection is closed")
 
 
-def create_movie_database(credentials, db_name='no_db'):
+def create_movie_database(db_name='no_db'):
     """
-    getting credentials and db_name,
+    getting a db_name,
     Connecting and creating database named db_name
     """
     print('connecting to mysql without database name')
-    db_connection = connect_to_mysql(credentials)
+    db_connection = connect_to_mysql()
     mycursor = db_connection.cursor()
     if db_name == 'no_db':
         db_name = input('Enter new database name: ')
@@ -105,13 +131,16 @@ def create_movie_database(credentials, db_name='no_db'):
     end_mysql_db_connection(db_connection, mycursor)
 
 
-def create_engine_sqlalchemy(credentials, db_name):
+def create_engine_sqlalchemy(db_name):
     """
-    getting credentials and db_name,
+    getting a db_name,
     Creating a sqlalchemy engine
     """
     return create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
-                         .format(host=credentials[0], db=db_name, user=credentials[1], pw=credentials[2]))
+                         .format(host=os.environ['hostname'], db=db_name, user=os.environ['username'],
+                                 pw=os.environ['password']))
+
+
 
 
 def movie_genres_to_dict(df):
@@ -130,13 +159,13 @@ def movie_genres_to_dict(df):
     return dict_genre
 
 
-def create_table_movie_genre(df, credentials, db_name):
+def create_table_movie_genre(df, db_name):
     """
-    getting dataframe, credentials, db_name
+    getting dataframe, db_name
     Creating movie_genre table
     Entering movie_id - the movie id, genre_id - the genre id
     """
-    db_connection = connect_to_mysql(credentials, db_name)
+    db_connection = connect_to_mysql(db_name)
     mycursor = db_connection.cursor()
 
     mycursor.execute("CREATE TABLE movie_genre (movie_id int, genre_id int)")
@@ -152,13 +181,13 @@ def create_table_movie_genre(df, credentials, db_name):
     end_mysql_db_connection(db_connection, mycursor)
 
 
-def create_table_disc(df, credentials, db_name):
+def create_table_disc(df, db_name):
     """
-    getting dataframe, credentials, db_name
+    getting dataframe, db_name
     Creating description table
     Entering movie_id - the movie id, movie_desc - the description
     """
-    db_connection = connect_to_mysql(credentials, db_name)
+    db_connection = connect_to_mysql(db_name)
     mycursor = db_connection.cursor()
 
     mycursor.execute("CREATE TABLE description (movie_id int, movie_desc varchar(8000))")
@@ -174,9 +203,9 @@ def create_table_disc(df, credentials, db_name):
     end_mysql_db_connection(db_connection, mycursor)
 
 
-def create_movie_tables(engine, df, credentials, db_name):
+def create_movie_tables(engine, df, db_name):
     """
-    Getting engine, dataframe, credentials, db_name
+    Getting engine, dataframe, db_name
     Creating the tables: movies, genres and movie_genre
     """
     movie = df.drop(['genre', 'desc'], axis=1)
@@ -186,13 +215,13 @@ def create_movie_tables(engine, df, credentials, db_name):
     movie.to_sql('movies', engine)
 
     genre_to_movie_id = pd.DataFrame.from_dict(movie_genres_to_dict(df[['genre']]), orient='index')
-    create_table_movie_genre(genre_to_movie_id, credentials, db_name)
-    create_table_disc(df[['desc']], credentials, db_name)
+    create_table_movie_genre(genre_to_movie_id, db_name)
+    create_table_disc(df[['desc']], db_name)
 
 
-def create_tables(credentials, db_name='no_db'):
+def create_tables(db_name='no_db'):
     """
-    gets credentials and database name
+    gets a database name
     creates all tables of movie database
     """
     df = pd.read_csv('output.csv')
@@ -200,15 +229,15 @@ def create_tables(credentials, db_name='no_db'):
     if db_name == 'no_db':
         db_name = input('Enter database name: ')
 
-    engine = create_engine_sqlalchemy(credentials, db_name)
+    engine = create_engine_sqlalchemy(db_name)
 
-    create_movie_tables(engine, df, credentials, db_name)
+    create_movie_tables(engine, df, db_name)
 
 
-if __name__ == '__main__':
+def run():
     print('creating database')
     db_name = 'movies'
-    credentials = login_credentials(db_name)
-    create_movie_database(credentials, db_name)
-    create_tables(credentials, db_name)
+    login_credentials(db_name)
+    #create_movie_database(db_name)
+    #create_tables(db_name)
     print('done!')
