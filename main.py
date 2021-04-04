@@ -9,6 +9,7 @@ import mng_args
 import sys
 from bs4 import BeautifulSoup as soup
 from datetime import datetime
+import sql_runner 
 
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -236,8 +237,8 @@ def get_top_movies_on_rotten_tomatoes(url=conf.TOMATO_BEST_MOVIES):
 
 
 if __name__ == "__main__":
-    df = get_top_movies_on_rotten_tomatoes()
-    print(df)
+    #df = get_top_movies_on_rotten_tomatoes()
+    #print(df)
     args = sys.argv
     args_dict = mng_args.create_parser(args)
-    print(args_dict)
+    sql_runner.run(args_dict)
