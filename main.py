@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup as soup
 from datetime import datetime
 import sql_runner
 import sql_wizard
+
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
 
@@ -41,7 +42,7 @@ def get_soup_from_url(url):
         movies_logger.info(f'Trying to get response for {url}')
         response = requests.get(url)
     except Exception as err:
-        movies_logger.error(f'An error occurred: {err}')  # todo: add more exceptions and explain in details
+        movies_logger.error(f'An error occurred: {err}')
         movies_logger.error(f'Exit program')
         sys.exit(1)
     movies_logger.info(f'Succeed getting response for {url}')
@@ -66,7 +67,7 @@ def get_responses_from_urls(urls):
     except Exception as err:
         return err
         movies_logger.error(f'An error occurred: {err}')
-        movies_logger.error(f'Exit program')  # todo: Must we leave the program? need to think about that
+        movies_logger.error(f'Exit program')
         sys.exit(1)
     movies_logger.info(f'Succeed getting responses for {len(urls)} urls')
     return responses_dict
@@ -77,8 +78,6 @@ def get_soups_from_urls(urls):
     keys = urls
     values = soups"""
     responses_dict = get_responses_from_urls(urls)
-    # todo: In this function, if we set responses_dict, and we get invalid respond/s (response 500) we can catch it here
-    #  instead of passing it to the next function
     soups_dict = {}
     for key in responses_dict:
         movies_logger.info(f'Creating soup for {key}')
@@ -225,25 +224,22 @@ def get_top_movies_on_rotten_tomatoes(url=conf.TOMATO_BEST_MOVIES):
     start = datetime.now()
     movies_logger.info(f'Starting to fetch all movies from {url} now!')
     # getting the names of the movies and their urls and putting them in a df
+    print('Scraping! Please wait a moment')
     movies = get_titles_movies(url)
     # fill the df with attributes of the movies
     movies = get_attributes_from_movies_urls(movies)
-    print(f'this operation took {datetime.now() - start} ')
+    print('Done scraping!')
+    print(f'This operation took {datetime.now() - start} ')
     movies_logger.info(f'Done!')
     movies_logger.info(f'This operation took {datetime.now() - start}')
-    print(movies)
     movies.to_csv('output.csv')
     return movies
 
 
 if __name__ == "__main__":
-    print('Scraping! please wait a moment')
-    df = get_top_movies_on_rotten_tomatoes()
-    #print(df)
-    print('Done scraping! Creating the database!')
     args = sys.argv
     args_dict = mng_args.create_parser(args)
+    df = get_top_movies_on_rotten_tomatoes()
     sql_wizard.run()
     print('Database is ready, running the query!')
-
     sql_runner.run(args_dict)

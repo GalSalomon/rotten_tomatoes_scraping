@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 from sqlalchemy import create_engine
+import sys
 
 GENRES = ['Mystery and thriller', 'Music', 'Musical', 'Documentary', 'Drama',
           'Romance', 'Horror', 'War', 'Biography', 'Gay and lesbian', 'History',
@@ -15,6 +16,32 @@ GENRES_DICT = {'Mystery and thriller': 0, 'Music': 1, 'Musical': 2, 'Documentary
                'Action': 11, 'Crime': 12, 'Comedy': 13, 'Sci fi': 14, 'Fantasy': 15, 'Adventure': 16,
                'Kids and family': 17, 'Animation': 18, 'Sports and fitness': 19, 'Other': 20}
 
+ENV_FILE_PATH = '.env'
+
+
+def get_credentials():
+    """gets credentials from the user"""
+    credentials = [input("Enter host name: "), input("Enter username: "), input("Enter password: "), db_name]
+    os.environ['hostname'] = credentials[0]
+    os.environ['username'] = credentials[1]
+    os.environ['password'] = credentials[2]
+    return
+
+
+def save_os_env_credentials_to_file():
+    """saves the os.environ sql credentials to '.env' file"""
+    with open(".env", "w") as f:
+        f.write('hostname=')
+        f.write(os.environ['hostname'])
+        f.write("\n")
+        f.write('username=')
+        f.write(os.environ['username'])
+        f.write("\n")
+        f.write('password=')
+        f.write(os.environ['password'])
+        f.write("\n")
+    return
+
 
 def login_credentials(db_name='no_db'):
     """
@@ -25,34 +52,21 @@ def login_credentials(db_name='no_db'):
     4th entry is the database name, if there isn't any
     """
 
-    PATH = '.env'
-    if os.path.isfile(PATH) and os.access(PATH, os.R_OK):
+    if os.path.isfile(ENV_FILE_PATH) and os.access(ENV_FILE_PATH, os.R_OK):
         with open(".env", "r") as f:
             for line in f.readlines():
                 try:
                     key, value = line[:-1].split('=')
                     os.environ[key] = value
-
                 except ValueError:
-                    # syntax error
-                    pass
+                    print('Could not read the .env credentials ')
+                    print("Let's create new credential file")
+                    get_credentials()
+                    save_os_env_credentials_to_file()
 
     else:
-        credentials = [input("Enter host name: "), input("Enter username: "), input("Enter password: "), db_name]
-        os.environ['hostname'] = credentials[0]
-        os.environ['username'] = credentials[1]
-        os.environ['password'] = credentials[2]
-
-        with open(".env", "w") as f:
-            f.write('hostname=')
-            f.write(os.environ['hostname'])
-            f.write("\n")
-            f.write('username=')
-            f.write(os.environ['username'])
-            f.write("\n")
-            f.write('password=')
-            f.write(os.environ['password'])
-            f.write("\n")
+        get_credentials()
+        save_os_env_credentials_to_file()
 
 
 def connect_to_mysql(db_name='no_db'):
@@ -70,9 +84,11 @@ def connect_to_mysql(db_name='no_db'):
                 user=os.environ['username'],
                 passwd=os.environ['password']
             )
-        except Error as e:
-            print(e)
-        print('connected to mysql!')
+        except Error as err:
+            print(f'An error occurred while trying to connect to the database: {err}')
+            print(f'Exit program')
+            sys.exit(1)
+        print('Connected to mysql!')
 
     # Login with db name
     else:
@@ -83,10 +99,11 @@ def connect_to_mysql(db_name='no_db'):
                 passwd=os.environ['password'],
                 database=db_name
             )
-        except Error as e:
-            print(e)
-        print('connected to mysql database!')
-
+        except Error as err:
+            print(f'An error occurred while trying to connect to the database: {err}')
+            print(f'Exit program')
+            sys.exit(1)
+        print('Connected to mysql database!')
     return _db_connection
 
 
@@ -118,7 +135,7 @@ def create_movie_database(db_name='no_db'):
     getting a db_name,
     Connecting and creating database named db_name
     """
-    print('connecting to mysql without database name')
+    print('Connecting to mysql without database name')
     db_connection = connect_to_mysql()
     mycursor = db_connection.cursor()
     if db_name == 'no_db':
@@ -135,11 +152,10 @@ def create_engine_sqlalchemy(db_name):
     getting a db_name,
     Creating a sqlalchemy engine
     """
+    print('Creating MySQL engine')
     return create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
                          .format(host=os.environ['hostname'], db=db_name, user=os.environ['username'],
                                  pw=os.environ['password']))
-
-
 
 
 def movie_genres_to_dict(df):
@@ -223,19 +239,19 @@ def create_tables(db_name='no_db'):
     gets a database name
     creates all tables of movie database
     """
+    print("Creating database from file")
+    print("Reading from output.csv file")
     df = pd.read_csv('output.csv')
 
     if db_name == 'no_db':
         db_name = input('Enter database name: ')
 
     engine = create_engine_sqlalchemy(db_name)
-
     create_movie_tables(engine, df, db_name)
 
 
 def run():
     db_name = 'movies'
     login_credentials(db_name)
-    #create_movie_database(db_name)
-    #create_tables(db_name)
-    print('done!')
+    create_movie_database(db_name)
+    create_tables(db_name)
