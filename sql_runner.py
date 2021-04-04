@@ -13,6 +13,9 @@ GENRES_DICT = {'Mystery and thriller': 0, 'Music': 1, 'Musical': 2, 'Documentary
 
 
 def query_options(dict_run):
+    """
+    gets a dicts, returns a query by this dict options
+    """
     if dict_run['score'] == 'Tomato':
         sql_command = ['SELECT url,title, length, year, poster,tomato_score FROM movies ']
     if dict_run['score'] == 'Audience':
@@ -22,7 +25,6 @@ def query_options(dict_run):
 
     if dict_run['geners'] != None:
         genre_to_id_list = [GENRES_DICT[x] for x in dict_run['geners']]
-        print(genre_to_id_list)
         if len(genre_to_id_list)>1:
             t = tuple(genre_to_id_list)
         else:
@@ -38,11 +40,11 @@ def query_options(dict_run):
         sql_command.append(' WHERE year BETWEEN ' + str(dict_run['min_year']) + ' AND ' + str(dict_run['max_year']))
 
     if dict_run['score'] == 'Tomato':
-        sql_command.append(' ORDER BY tomato_score')
+        sql_command.append(' ORDER BY tomato_score DESC')
     if dict_run['score'] == 'Audience':
-        sql_command.append(' ORDER BY audience_score')
+        sql_command.append(' ORDER BY audience_score DESC')
     if dict_run['score'] == 'Both':
-        sql_command.append(' ORDER BY Average')
+        sql_command.append(' ORDER BY Average DESC')
 
     if dict_run['limit'] != None:
         sql_command.append(' LIMIT ' + str(dict_run['limit']))
@@ -51,6 +53,10 @@ def query_options(dict_run):
 
 
 def running_query(credentials, dict_run, db_name='no_db'):
+    """
+    gets credentials, a dict and a database name
+    runs a query on the database
+    """
     sql = query_options(dict_run)
     print(sql)
     print('connecting to mysql with database name')
@@ -59,8 +65,9 @@ def running_query(credentials, dict_run, db_name='no_db'):
     print(sql_data)
     end_mysql_db_connection_without_cursor(db_connection)
 
-if __name__ == '__main__':
-    dict_run = {'score': 'Tomato', 'limit': 100, 'min_year': 2000, 'max_year': 2020, 'geners': ['Drama']}
+
+def run(dict_run):
     db_name = 'movies'
     credentials = login_credentials(db_name)
     running_query(credentials, dict_run, db_name)
+
