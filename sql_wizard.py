@@ -5,6 +5,7 @@ import numpy as np
 import os
 from sqlalchemy import create_engine
 import sys
+import pymysql
 
 GENRES = ['Mystery and thriller', 'Music', 'Musical', 'Documentary', 'Drama',
           'Romance', 'Horror', 'War', 'Biography', 'Gay and lesbian', 'History',
