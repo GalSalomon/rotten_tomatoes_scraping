@@ -19,7 +19,7 @@ GENRES_DICT = {'Mystery and thriller': 0, 'Music': 1, 'Musical': 2, 'Documentary
 ENV_FILE_PATH = '.env'
 
 
-def get_credentials():
+def get_credentials(db_name):
     """gets credentials from the user"""
     credentials = [input("Enter host name: "), input("Enter username: "), input("Enter password: "), db_name]
     os.environ['hostname'] = credentials[0]
@@ -61,11 +61,11 @@ def login_credentials(db_name='no_db'):
                 except ValueError:
                     print('Could not read the .env credentials ')
                     print("Let's create new credential file")
-                    get_credentials()
+                    get_credentials(db_name)
                     save_os_env_credentials_to_file()
 
     else:
-        get_credentials()
+        get_credentials(db_name)
         save_os_env_credentials_to_file()
 
 
