@@ -20,3 +20,6 @@ chardet~=4.0.0
 urllib3~=1.26.4
 idna~=2.10
 pycparser~=2.20
+mysql~=0.0.2
+PyMySQL~=1.0.2
+SQLAlchemy~=1.4.12
