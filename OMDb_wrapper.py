@@ -1,13 +1,12 @@
 import requests
-import conf
+import os
 import ast
 
 
 def get_metacritic_and_imdbscore(movie_title):
     """This function gets a movie title and returns it's imdb and metacritic scores"""
-    url = f'http://www.omdbapi.com/?t={movie_title}&apikey={conf.API_KEY}'
+    url = f'http://www.omdbapi.com/?t={movie_title}&apikey={os.environ.API_KEY}'
     try:
-
         response = requests.get(url)
     except Exception as err:
         print(f'error: {err}')
