@@ -50,7 +50,6 @@ def get_soup_from_url(url):
 
 
 def get_responses_from_urls(urls):
-    # this function is DONE!
     """receives urls and returns a dict:
     keys = urls
     values = responses"""
@@ -240,6 +239,8 @@ if __name__ == "__main__":
     args = sys.argv
     args_dict = mng_args.create_parser(args)
     df = get_top_movies_on_rotten_tomatoes()
+
     sql_wizard.run()
+
     print('Database is ready, running the query!')
     sql_runner.run(args_dict)

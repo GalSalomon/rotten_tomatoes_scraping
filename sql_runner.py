@@ -70,3 +70,12 @@ def run(dict_run):
     db_name = 'movies'
     login_credentials(db_name)
     running_query(dict_run, db_name)
+
+
+def get_titles_from_database():
+    """
+    Gets a database of movies
+    :return: returns a list of movie titles
+    """
+
+    pass
