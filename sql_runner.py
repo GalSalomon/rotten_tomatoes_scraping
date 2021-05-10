@@ -18,10 +18,10 @@ def query_options(dict_run):
     """
     if dict_run['score'] == 'Tomato':
         sql_command = ['SELECT url,title, length, year, poster,tomato_score FROM movies ']
-    if dict_run['score'] == 'Audience':
-        sql_command = ['SELECT url,title, length, year, poster,audience_score FROM movies ']
-    if dict_run['score'] == 'Both':
-        sql_command = ['SELECT url,title, length, year, poster, ((movies.audience_score)+(movies.tomato_score))/2 as '
+    elif dict_run['score'] == 'IMDb':
+        sql_command = ['SELECT url,title, length, year, poster,imdb_score FROM movies ']
+    elif dict_run['score'] == 'Both':
+        sql_command = ['SELECT url,title, length, year, poster, ((movies.imdb_score)+(movies.tomato_score))/2 as '
                        'Average FROM movies ']
 
     if dict_run['geners'] is not None:
@@ -42,9 +42,9 @@ def query_options(dict_run):
 
     if dict_run['score'] == 'Tomato':
         sql_command.append(' ORDER BY tomato_score DESC')
-    if dict_run['score'] == 'Audience':
-        sql_command.append(' ORDER BY audience_score DESC')
-    if dict_run['score'] == 'Both':
+    elif dict_run['score'] == 'IMDb':
+        sql_command.append(' ORDER BY imdb_score DESC')
+    elif dict_run['score'] == 'Both':
         sql_command.append(' ORDER BY Average DESC')
 
     if dict_run['limit'] is not None:
@@ -70,12 +70,3 @@ def run(dict_run):
     db_name = 'movies'
     login_credentials(db_name)
     running_query(dict_run, db_name)
-
-
-def get_titles_from_database():
-    """
-    Gets a database of movies
-    :return: returns a list of movie titles
-    """
-
-    pass

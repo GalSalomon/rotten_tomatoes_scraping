@@ -6,7 +6,12 @@ import logging
 import requests
 import pandas as pd
 import sys
+import ast
+import re
+import platform
 import os
+from tqdm import tqdm
+from decouple import config
 from bs4 import BeautifulSoup as soup
 from datetime import datetime
 
@@ -184,11 +189,11 @@ def get_rotten_tomatos_attributes_from_movies_urls(movies):
     """This function receives a df with movie title and a url for the movie's page on rotten tomatoes
      and returns a filled df, with additional attributes for each movie"""
     # We will work in batches in order to sent several requests in parallel
-    for x in range(int(len(movies) / conf.BATCH_SIZE)):
+    for x in tqdm(range(int(len(movies) / conf.BATCH_SIZE))):
         # runs from 0 till len(movies) / BATCH_SIZE
         movies_logger.info(f'Starting batch {x + 1}/{len(range(int(len(movies) / conf.BATCH_SIZE)))}')
         soups_dict = get_soups_from_urls(movies.index[x * conf.BATCH_SIZE:x * conf.BATCH_SIZE + conf.BATCH_SIZE])
-        for key in soups_dict:
+        for key in tqdm(soups_dict):
             movie_dict = get_attributes_from_soup(key, soups_dict[key])
             if movie_dict:
                 movies = add_data_to_movies_df(movies, movie_dict)
@@ -213,20 +218,62 @@ def get_movie_titles_from_rotten_tomatos(url):
     return movies
 
 
+def create_omdb_url(title):
+    """gets a title and returns a clean url for the omdb API"""
+    key = config('API_KEY')
+    title = re.sub("\(.*?\)","()",title)\
+              .replace('(', '')\
+              .replace(')', '')\
+              .rstrip()\
+              .replace(' ', '_')\
+              .rsplit(':', 1)[0]
+    url = f'http://www.omdbapi.com/?t={title}&apikey={key}'
+    return url
+
+
 def get_omdb_attributes_from_movies_urls(movies, url_omdbapi):
     """This function receives a pandas df with movies attributes from rotten tomatoes and
     adds two columns: imdb score and metacritic score"""
     movies_logger.info(f'Fetching scores from OMDb API')
-    for x in range(int(len(movies) / conf.BATCH_SIZE)):
+    imdb_scores = []
+    metacritic_scores = []
+    for x in tqdm(range(int(len(movies) / conf.BATCH_SIZE))):
         # runs from 0 till len(movies) / BATCH_SIZE
-        movies_logger.info(f'Starting batch {x + 1}/{len(range(int(len(movies) / conf.BATCH_SIZE)))}')
         idxs = movies.index[x * conf.BATCH_SIZE:x * conf.BATCH_SIZE + conf.BATCH_SIZE]
         titles = movies[movies.index.isin(idxs)]['title']
-        urls = [f'http://www.omdbapi.com/?t={t}&apikey={os.environ.API_KEY}' for t in titles]
+        urls = [create_omdb_url(t) for t in titles]
         responses_dict = get_responses_from_urls(urls)
-        for key in responses_dict:
-
+        for key in tqdm(responses_dict):
+            r = responses_dict[key]
+            omdb_dict = ast.literal_eval(r.content.decode("UTF-8"))
+            try:
+                imdb_scores.append(round(float(omdb_dict['imdbRating']) * 10))
+            except Exception as err:
+                # did not find
+                imdb_scores.append(np.nan)
+            try:
+                metacritic_scores.append(round(float(omdb_dict['Metascore'])))
+            except Exception as err:
+                # did not find
+                metacritic_scores.append(np.nan)
+    movies['imdb_score'] = imdb_scores
+    movies['metacritic_score'] = metacritic_scores
     return movies
+
+
+def file_created_today(path_to_file='output.csv'):
+    """
+    returns True is file exists and was created today.
+    Else - False
+    """
+    if os.path.exists(path_to_file):
+        if platform.system() == 'Windows':
+            result = os.path.getmtime(path_to_file)
+        else:
+            result = os.stat(path_to_file).st_mtime
+        return datetime.fromtimestamp(result).date() == datetime.now().date()
+    else:
+        return False
 
 
 def get_top_movies_data(url_rotten_tomatoes=conf.TOMATO_BEST_MOVIES, url_omdbapi=conf.OMDB_API_URL):
@@ -234,17 +281,23 @@ def get_top_movies_data(url_rotten_tomatoes=conf.TOMATO_BEST_MOVIES, url_omdbapi
     1. creates a pandas df with several attributes about the top netflix movies on rotten tomatoes
     2. saves it to csv
     """
-    start = datetime.now()
-    movies_logger.info(f'Starting to fetch all movies from {url_rotten_tomatoes} now!')
-    # getting the names of the movies and their urls and putting them in a df
-    print('Scraping Rotten Tomatoes! Please wait a moment')
-    movies = get_movie_titles_from_rotten_tomatos(url_rotten_tomatoes)
-    # fill the df with attributes of the movies
-    movies = get_rotten_tomatos_attributes_from_movies_urls(movies)
-    movies = get_omdb_attributes_from_movies_urls(movies, url_omdbapi)
-    print('Done scraping!')
-    print(f'This operation took {datetime.now() - start} ')
-    movies_logger.info(f'Done!')
-    movies_logger.info(f'This operation took {datetime.now() - start}')
-    movies.to_csv('output.csv')
+    if file_created_today():
+        print('Scraping was done today.\nImporting db from file')
+        movies = pd.read_csv('output.csv')
+    else:
+        start = datetime.now()
+        movies_logger.info(f'Starting to fetch all movies from {url_rotten_tomatoes} now!')
+        # getting the names of the movies and their urls and putting them in a df
+        print('Scraping Rotten Tomatoes! Please wait a moment')
+        movies = get_movie_titles_from_rotten_tomatos(url_rotten_tomatoes)
+        # fill the df with attributes of the movies
+        movies = get_rotten_tomatos_attributes_from_movies_urls(movies)
+        print('Done scraping from Rotten Tomatoes!')
+        print('Scraping IMDb! Please wait a moment')
+        movies = get_omdb_attributes_from_movies_urls(movies, url_omdbapi)
+        print('Done scraping from IMDb!')
+        print(f'This operation took {datetime.now() - start} ')
+        movies_logger.info(f'Done!')
+        movies_logger.info(f'This operation took {datetime.now() - start}')
+        movies.to_csv('output.csv')
     return movies
