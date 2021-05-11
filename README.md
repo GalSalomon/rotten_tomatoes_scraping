@@ -2,8 +2,7 @@
 
 
 # rotten_tomatoes_scraping
-This program scrapes the current top 100 movies on Netflix by RottenTomatoes website and 
-returns a list of movies. The user can enter input filters (year of release, 
+This program scrapes the current top 100 movies on Netflix by RottenTomatoes website, adds IMDb score to them (With OMDb API), and returns a list of movies. The user can enter input filters (year of release, 
 prefered genres, score etc.), and the program will return the most relevant list to the user.
 
 ### Installation
@@ -28,28 +27,29 @@ $ python main.py -h
 ```
 output:
 ```sh
-usage: main.py [-h] [-s] [-l] [-min_y] [-max_y] [-g [[...]]]
+usage: main.py [-h] [-s] [-l] [-min_y] [-max_y] [-g [...]]
 
-Get the current top Netflx movies accorting to Rotten Tomatoes.
+Get the current top Netflx movies accorting to Rotten Tomatoes and IMDb.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s , --score          The score used. Could be Tomato or Audience. Default is Both
+  -s , --score          The score used. Could be Tomato or IMDb. Default is Both
   -l , --limit          Limit of results. Default 10
   -min_y , --min_year   Minimum year. Default None
   -max_y , --max_year   Miximum year. Default None
-  -g [ [ ...]], --geners [ [ ...]]
+  -g [ ...], --geners [ ...]
                         List of Geners to filter. Default None
+
 ```
 #### Available filters and options:
 
 ##### -s
-* The Score used to rank the results. The available scores are audience, tomato and both.
+* The Score used to rank the results. The available scores are IMDb, tomato and both.
 The default is both.
-1. audience score means that the program uses only the scores provided by the rotten tomatoes 
-website users (users reviews)
+1. IMDb score means that the program uses only the scores provided by the IMDb 
+website.
 2. tomato score means that the program uses only the scores provided by the rotten tomatoes 
-website critics (proffesional critics reviews)
+website critics (professional critics reviews)
 3.  both means the program uses the average of both. This is the default
 
 ##### -l
@@ -79,6 +79,11 @@ python main.py -l 6 -min_y 1967 -max_y 2012 -g Horror Drama
 * Scraping useful data from the soup objects, by filtering HTML tags and classes.
 * Arranging data in a pandas dataframe.
 * Exporting the dataframe to an out.csv file
+
+
+### Conf and env files:
+* Conf.py will contain OMDB_API_URL, BATCH_SIZE for grequest scraping function, and the URL of the 100 best movies on Rotten Tomatoes.
+* .env file will contain the local database login credentials.
 
 
 ### SQL Scheme Diagram
