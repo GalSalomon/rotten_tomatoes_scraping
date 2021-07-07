@@ -1,5 +1,5 @@
 ![img.png](img.png)
-
+Chaos + Prints designed by Craig Henry
 
 # rotten_tomatoes_scraping
 This program scrapes the current top 100 movies on Netflix by RottenTomatoes website, adds IMDb score to them (With OMDb API), and returns a list of movies. The user can enter input filters (year of release, 
